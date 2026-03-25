@@ -71,6 +71,20 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
+export const updateUserPhoto = createAsyncThunk(
+  'users/updateUserPhoto',
+  async ({ id, formData }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/users/${id}/photo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Impossible de mettre a jour la photo"));
+    }
+  }
+);
+
 export const assignUserRoles = createAsyncThunk(
   'users/assignUserRoles',
   async ({ id, ids }, { rejectWithValue }) => {
@@ -163,6 +177,9 @@ const usersSlice = createSlice({
       })
       .addCase(updateUser.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateUserPhoto.rejected, (state, action) => {
         state.error = action.payload;
       })
       .addCase(assignUserRoles.rejected, (state, action) => {

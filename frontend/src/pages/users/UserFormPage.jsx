@@ -12,8 +12,8 @@ import {
   clearCurrentUser,
   clearUsersError,
   createUser,
-  fetchUserById,
   updateUser,
+  updateUserPhoto,
 } from '../../features/users/usersSlice';
 
 const nameRegex = /^[a-zA-Z]{4,}$/;
@@ -24,7 +24,14 @@ const schema = yup.object({
   email: yup.string().email('Email invalide').required("L'email est obligatoire"),
   mot_de_passe: yup.string().when('$isEdit', {
     is: true,
-    then: (value) => value.optional(),
+    then: (value) =>
+      value
+        .required('Le mot de passe est obligatoire')
+        .min(8, 'Au moins 8 caracteres')
+        .matches(/\d/, 'Au moins un chiffre')
+        .matches(/[a-z]/, 'Au moins une minuscule')
+        .matches(/[A-Z]/, 'Au moins une majuscule')
+        .matches(/[!@#$%^&*(),.?":{}|<>]/, 'Au moins un caractere special'),
     otherwise: (value) =>
       value
         .required('Le mot de passe est obligatoire')
@@ -45,7 +52,7 @@ const UserFormPage = () => {
   const isEdit = Boolean(id);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { currentUser, loading, error } = useSelector((state) => state.users);
+  const { loading, error } = useSelector((state) => state.users);
   const [departments, setDepartments] = useState([]);
   const [roles, setRoles] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -106,35 +113,44 @@ const UserFormPage = () => {
   }, []);
 
   useEffect(() => {
-    if (isEdit) {
-      dispatch(fetchUserById(id));
+    if (!isEdit) {
+      return () => {
+        dispatch(clearCurrentUser());
+      };
     }
+
+    dispatch(clearCurrentUser());
+
+    const loadCurrentUser = async () => {
+      try {
+        const response = await api.get(`/users/${id}`);
+        const user = response.data.data;
+
+        reset({
+          nom: user.nom || '',
+          prenom: user.prenom || '',
+          email: user.email || '',
+          mot_de_passe: '',
+          naissance: user.naissance || '',
+          biographie: user.biographie || '',
+          conduite: user.conduite || '',
+          DepartmentId: user.DepartmentId ? String(user.DepartmentId) : '',
+        });
+
+        setSelectedRoles((user.Roles || []).map((role) => role.id));
+        setSelectedSubjects((user.Subjects || []).map((subject) => subject.id));
+        setPhotoPreview(user.photo || '');
+      } catch {
+        // L'erreur reseau ou API est geree au submit ou via l'ecran detail.
+      }
+    };
+
+    loadCurrentUser();
 
     return () => {
       dispatch(clearCurrentUser());
     };
-  }, [dispatch, id, isEdit]);
-
-  useEffect(() => {
-    if (!isEdit || !currentUser) {
-      return;
-    }
-
-    reset({
-      nom: currentUser.nom || '',
-      prenom: currentUser.prenom || '',
-      email: currentUser.email || '',
-      mot_de_passe: '',
-      naissance: currentUser.naissance || '',
-      biographie: currentUser.biographie || '',
-      conduite: currentUser.conduite || '',
-      DepartmentId: currentUser.DepartmentId ? String(currentUser.DepartmentId) : '',
-    });
-
-    setSelectedRoles((currentUser.Roles || []).map((role) => role.id));
-    setSelectedSubjects((currentUser.Subjects || []).map((subject) => subject.id));
-    setPhotoPreview(currentUser.photo || '');
-  }, [currentUser, isEdit, reset]);
+  }, [dispatch, id, isEdit, reset]);
 
   const handleIdsChange = (setter) => (event) => {
     const ids = Array.from(event.target.selectedOptions).map((option) => Number(option.value));
@@ -159,11 +175,13 @@ const UserFormPage = () => {
     try {
       if (isEdit) {
         const payload = { ...data };
-        if (!payload.mot_de_passe) {
-          delete payload.mot_de_passe;
-        }
 
         await dispatch(updateUser({ id, data: payload })).unwrap();
+        if (photoFile) {
+          const photoData = new FormData();
+          photoData.append('photo', photoFile);
+          await dispatch(updateUserPhoto({ id, formData: photoData })).unwrap();
+        }
         await dispatch(assignUserRoles({ id, ids: selectedRoles })).unwrap().catch(() => {});
         await dispatch(assignUserSubjects({ id, ids: selectedSubjects })).unwrap().catch(() => {});
       } else {
@@ -182,6 +200,19 @@ const UserFormPage = () => {
         }
 
         await dispatch(createUser(formData)).unwrap();
+
+        const usersResponse = await api.get(`/users?page=1&size=100&search=${encodeURIComponent(data.nom)}`);
+        const createdUser = (usersResponse.data.data?.users || []).find((user) => user.email === data.email);
+
+        if (createdUser?.id) {
+          if (selectedRoles.length > 0) {
+            await dispatch(assignUserRoles({ id: createdUser.id, ids: selectedRoles })).unwrap().catch(() => {});
+          }
+
+          if (selectedSubjects.length > 0) {
+            await dispatch(assignUserSubjects({ id: createdUser.id, ids: selectedSubjects })).unwrap().catch(() => {});
+          }
+        }
       }
 
       navigate('/users');

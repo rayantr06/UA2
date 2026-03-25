@@ -10,14 +10,18 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const user = useSelector((state) => state.auth.user);
+  const isAdmin = Boolean(user?.Roles?.some((role) => role.titre?.toLowerCase() === 'admin'));
 
   const menuItems = [
     { icon: <LayoutGrid size={20} />, label: 'Dashboard', path: '/' },
     { icon: <FlaskConical size={20} />, label: 'Laboratories', path: '/laboratories' },
     { icon: <Laptop size={20} />, label: 'Equipment', path: '/equipment' },
     { icon: <Users size={20} />, label: 'Users', path: '/users' },
-    { icon: <ShieldCheck size={20} />, label: 'Roles', path: '/roles' },
   ];
+
+  if (isAdmin) {
+    menuItems.push({ icon: <ShieldCheck size={20} />, label: 'Roles', path: '/roles' });
+  }
 
   const handleLogout = () => {
     dispatch(logout());

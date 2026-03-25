@@ -27,7 +27,7 @@ const cleanUser = (user) => {
     return null;
   }
 
-  const { mot_de_passe, ...safeUser } = user;
+  const { mot_de_passe: _MOT_DE_PASSE, ...safeUser } = user;
   return safeUser;
 };
 
@@ -65,6 +65,15 @@ export const loginUser = createAsyncThunk(
         user: cleanUser(response.data.data),
         token: response.data.token,
       };
+
+      saveAuth(authData);
+
+      try {
+        const profileResponse = await api.get(`/users/${authData.user.id}`);
+        authData.user = cleanUser(profileResponse.data.data);
+      } catch {
+        // On garde les informations minimales de login si le profil complet echoue.
+      }
 
       saveAuth(authData);
       return authData;
