@@ -9,7 +9,7 @@ import { deleteSubject, fetchSubjects } from '../../features/subjects/subjectsSl
 const SubjectList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, total, currentPage, totalPages, loading, error } = useSelector(
+  const { items, currentPage, totalPages, loading, error } = useSelector(
     (state) => state.subjects
   );
 
