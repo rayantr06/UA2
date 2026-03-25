@@ -9,6 +9,13 @@ import EquipmentForm from './pages/equipment/EquipmentForm';
 import EquipmentDetail from './pages/equipment/EquipmentDetail';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import DepartmentList from './pages/departments/DepartmentList';
+import DepartmentForm from './pages/departments/DepartmentForm';
+import DepartmentDetail from './pages/departments/DepartmentDetail';
+import SubjectList from './pages/subjects/SubjectList';
+import SubjectForm from './pages/subjects/SubjectForm';
+import SubjectDetail from './pages/subjects/SubjectDetail';
+import ModulePlaceholderPage from './pages/shared/ModulePlaceholderPage';
 import ProtectedRoute from './routes/ProtectedRoute';
 import UsersListPage from './pages/users/UsersListPage';
 import UserFormPage from './pages/users/UserFormPage';
@@ -25,6 +32,16 @@ const App = () => {
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/" element={<DashboardPage />} />
+
+          <Route path="/departments" element={<DepartmentList />} />
+          <Route path="/departments/new" element={<DepartmentForm />} />
+          <Route path="/departments/edit/:id" element={<DepartmentForm />} />
+          <Route path="/departments/:id" element={<DepartmentDetail />} />
+
+          <Route path="/subjects" element={<SubjectList />} />
+          <Route path="/subjects/new" element={<SubjectForm />} />
+          <Route path="/subjects/edit/:id" element={<SubjectForm />} />
+          <Route path="/subjects/:id" element={<SubjectDetail />} />
 
           <Route path="/laboratories" element={<LaboratoryList />} />
           <Route path="/laboratories/new" element={<LaboratoryForm />} />

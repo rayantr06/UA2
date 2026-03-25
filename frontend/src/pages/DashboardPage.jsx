@@ -1,32 +1,50 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { FlaskConical, Laptop, ShieldCheck, Users } from 'lucide-react';
+import { FlaskConical, Laptop, ShieldCheck, Users, Library, BookOpen } from 'lucide-react';
 
 const modules = [
+  {
+    title: 'Départements',
+    description: 'Gérer la structure organisationnelle du campus.',
+    icon: Library,
+    path: '/departments',
+    color: 'bg-indigo-50 text-indigo-600',
+  },
+  {
+    title: 'Matières',
+    description: 'Consulter et gérer le catalogue des cours.',
+    icon: BookOpen,
+    path: '/subjects',
+    color: 'bg-violet-50 text-violet-600',
+  },
   {
     title: 'Laboratories',
     description: 'Consulter et gerer les laboratoires.',
     icon: FlaskConical,
     path: '/laboratories',
+    color: 'bg-primary-50 text-primary-600',
   },
   {
     title: 'Equipment',
     description: 'Suivre les equipements du campus.',
     icon: Laptop,
     path: '/equipment',
+    color: 'bg-emerald-50 text-emerald-600',
   },
   {
     title: 'Users',
     description: 'La gestion des utilisateurs arrive ici.',
     icon: Users,
     path: '/users',
+    color: 'bg-amber-50 text-amber-600',
   },
   {
     title: 'Roles',
     description: 'La gestion des roles arrive ici.',
     icon: ShieldCheck,
     path: '/roles',
+    color: 'bg-rose-50 text-rose-600',
   },
 ];
 
@@ -45,20 +63,16 @@ const DashboardPage = () => {
         </p>
       </section>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {modules.map((module) => {
-          const IconComponent = module.icon;
-
-          return (
-            <Link key={module.path} to={module.path} className="card p-6 hover:-translate-y-1 transition-transform duration-200">
-              <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center mb-4">
-                <IconComponent size={24} />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900">{module.title}</h2>
-              <p className="text-sm text-gray-500 mt-2">{module.description}</p>
-            </Link>
-          );
-        })}
+      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {modules.map(({ title, description, icon: Icon, path, color }) => (
+          <Link key={path} to={path} className="card p-6 hover:-translate-y-1 transition-transform duration-200">
+            <div className={`w-12 h-12 rounded-xl ${color || 'bg-primary-50 text-primary-600'} flex items-center justify-center mb-4`}>
+              <Icon size={24} />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            <p className="text-sm text-gray-500 mt-2">{description}</p>
+          </Link>
+        ))}
       </section>
     </div>
   );
