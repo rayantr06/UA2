@@ -56,19 +56,19 @@ Relations principales:
 
 ## Repartition officielle du travail
 
-### Membre 1
+### Membre 1 : Hamou Aldja Fouad 2734173
 - Departments
 - Subjects
 - validation des formulaires de ces modules
 - recherche, pagination et composants CRUD reutilisables sur ces pages
 
-### Membre 2
+### Membre 2 : Abdelhak Bensalem 2742264
 - Laboratories
 - Equipment
 - gestion des images dans ces modules
 - adaptation responsive de ces ecrans
 
-### Membre 3
+### Membre 3 : Rayane Terki 2733003
 - Users
 - Roles
 - authentification frontend
