@@ -279,24 +279,54 @@ const UserFormPage = () => {
               <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Roles</label>
-                  <select multiple value={selectedRoles.map(String)} onChange={handleIdsChange(setSelectedRoles)} className="input-field min-h-32">
-                    {roles.map((role) => (
-                      <option key={role.id} value={role.id}>
-                        {role.titre}
-                      </option>
-                    ))}
+                  <select
+                    multiple
+                    value={selectedRoles.map(String)}
+                    onChange={handleIdsChange(setSelectedRoles)}
+                    className="input-field min-h-32"
+                    disabled={roles.length === 0}
+                  >
+                    {roles.length === 0 ? (
+                      <option value="">Aucun role disponible</option>
+                    ) : (
+                      roles.map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.titre}
+                        </option>
+                      ))
+                    )}
                   </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {roles.length === 0
+                      ? "La base actuelle ne contient pas encore de role utilisable."
+                      : 'Maintiens Ctrl pour selectionner plusieurs roles.'}
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Matieres</label>
-                  <select multiple value={selectedSubjects.map(String)} onChange={handleIdsChange(setSelectedSubjects)} className="input-field min-h-32">
-                    {subjects.map((subject) => (
-                      <option key={subject.id} value={subject.id}>
-                        {subject.nom}
-                      </option>
-                    ))}
+                  <select
+                    multiple
+                    value={selectedSubjects.map(String)}
+                    onChange={handleIdsChange(setSelectedSubjects)}
+                    className="input-field min-h-32"
+                    disabled={subjects.length === 0}
+                  >
+                    {subjects.length === 0 ? (
+                      <option value="">Aucune matiere disponible</option>
+                    ) : (
+                      subjects.map((subject) => (
+                        <option key={subject.id} value={subject.id}>
+                          {subject.nom}
+                        </option>
+                      ))
+                    )}
                   </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {subjects.length === 0
+                      ? "La base actuelle ne contient pas encore de matiere."
+                      : 'Maintiens Ctrl pour selectionner plusieurs matieres.'}
+                  </p>
                 </div>
               </div>
             </div>
