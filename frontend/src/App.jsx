@@ -9,8 +9,13 @@ import EquipmentForm from './pages/equipment/EquipmentForm';
 import EquipmentDetail from './pages/equipment/EquipmentDetail';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import ModulePlaceholderPage from './pages/shared/ModulePlaceholderPage';
 import ProtectedRoute from './routes/ProtectedRoute';
+import UsersListPage from './pages/users/UsersListPage';
+import UserFormPage from './pages/users/UserFormPage';
+import UserDetailPage from './pages/users/UserDetailPage';
+import RolesListPage from './pages/roles/RolesListPage';
+import RoleFormPage from './pages/roles/RoleFormPage';
+import RoleDetailPage from './pages/roles/RoleDetailPage';
 
 const App = () => {
   return (
@@ -31,24 +36,14 @@ const App = () => {
           <Route path="/equipment/edit/:id" element={<EquipmentForm />} />
           <Route path="/equipment/:id" element={<EquipmentDetail />} />
 
-          <Route
-            path="/users"
-            element={
-              <ModulePlaceholderPage
-                title="Users"
-                description="La base auth est en place. Ce module est pret a recevoir le CRUD utilisateurs."
-              />
-            }
-          />
-          <Route
-            path="/roles"
-            element={
-              <ModulePlaceholderPage
-                title="Roles"
-                description="Cette route est deja protegee et prete pour brancher le CRUD roles."
-              />
-            }
-          />
+          <Route path="/users" element={<UsersListPage />} />
+          <Route path="/users/new" element={<UserFormPage />} />
+          <Route path="/users/edit/:id" element={<UserFormPage />} />
+          <Route path="/users/:id" element={<UserDetailPage />} />
+
+          <Route path="/roles" element={<RolesListPage />} />
+          <Route path="/roles/new" element={<RoleFormPage />} />
+          <Route path="/roles/:id" element={<RoleDetailPage />} />
         </Route>
       </Route>
 
