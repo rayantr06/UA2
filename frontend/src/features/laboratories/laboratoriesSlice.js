@@ -55,7 +55,7 @@ export const updateLaboratoryImage = createAsyncThunk(
   'laboratories/updateImage',
   async ({ id, formData }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/laboratories/image/${id}`, formData, {
+      const response = await api.put(`/laboratories/${id}/image`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return response.data;

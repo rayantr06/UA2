@@ -5,7 +5,7 @@ export const fetchEquipments = createAsyncThunk(
   'equipment/fetchAll',
   async ({ page = 1, size = 10, search = '' } = {}, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/equipments?page=${page}&size=${size}&search=${search}`);
+      const response = await api.get(`/equipment?page=${page}&size=${size}&search=${search}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -17,7 +17,7 @@ export const fetchEquipmentById = createAsyncThunk(
   'equipment/fetchById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/equipments/${id}`);
+      const response = await api.get(`/equipment/${id}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -29,7 +29,7 @@ export const addEquipment = createAsyncThunk(
   'equipment/add',
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/equipments', formData, {
+      const response = await api.post('/equipment', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return response.data;
@@ -43,7 +43,7 @@ export const updateEquipment = createAsyncThunk(
   'equipment/update',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/equipments/${id}`, data);
+      const response = await api.put(`/equipment/${id}`, data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -55,7 +55,7 @@ export const updateEquipmentImage = createAsyncThunk(
   'equipment/updateImage',
   async ({ id, formData }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/equipments/image/${id}`, formData, {
+      const response = await api.put(`/equipment/${id}/image`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return response.data;
@@ -69,7 +69,7 @@ export const deleteEquipment = createAsyncThunk(
   'equipment/delete',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await api.delete(`/equipments/${id}`);
+      const response = await api.delete(`/equipment/${id}`);
       return { id, message: response.data.message };
     } catch (error) {
       return rejectWithValue(error.response.data);
