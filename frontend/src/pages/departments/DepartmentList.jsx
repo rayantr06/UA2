@@ -9,7 +9,7 @@ import { deleteDepartment, fetchDepartments } from '../../features/departments/d
 const DepartmentList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, total, currentPage, totalPages, loading, error } = useSelector(
+  const { items, currentPage, totalPages, loading, error } = useSelector(
     (state) => state.departments
   );
 
