@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutGrid, FlaskConical, Laptop, Users, LogOut, Menu, X, ShieldCheck } from 'lucide-react';
+import { LayoutGrid, FlaskConical, Laptop, Users, LogOut, Menu, X, ShieldCheck, Library, BookOpen } from 'lucide-react';
 import { logout } from '../features/auth/authSlice';
 
 const Layout = ({ children }) => {
@@ -14,6 +14,8 @@ const Layout = ({ children }) => {
 
   const menuItems = [
     { icon: <LayoutGrid size={20} />, label: 'Dashboard', path: '/' },
+    { icon: <Library size={20} />, label: 'Départements', path: '/departments' },
+    { icon: <BookOpen size={20} />, label: 'Matières', path: '/subjects' },
     { icon: <FlaskConical size={20} />, label: 'Laboratories', path: '/laboratories' },
     { icon: <Laptop size={20} />, label: 'Equipment', path: '/equipment' },
     { icon: <Users size={20} />, label: 'Users', path: '/users' },

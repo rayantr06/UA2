@@ -4,6 +4,8 @@ import equipmentReducer from '../features/equipment/equipmentSlice';
 import authReducer from '../features/auth/authSlice';
 import usersReducer from '../features/users/usersSlice';
 import rolesReducer from '../features/roles/rolesSlice';
+import departmentsReducer from '../features/departments/departmentsSlice';
+import subjectsReducer from '../features/subjects/subjectsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,5 +14,7 @@ export const store = configureStore({
     auth: authReducer,
     users: usersReducer,
     roles: rolesReducer,
+    departments: departmentsReducer,
+    subjects: subjectsReducer,
   },
 });
