@@ -1,21 +1,50 @@
-import React, { useEffect, useState } from 'react';
+import React, { useDeferredValue, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchLaboratories, deleteLaboratory } from '../../features/laboratories/laboratoriesSlice';
-import { Plus, Edit2, Trash2, Eye, Search, MoreVertical } from 'lucide-react';
+import {
+  clearError,
+  deleteLaboratory,
+  fetchLaboratories,
+} from '../../features/laboratories/laboratoriesSlice';
+import { ChevronLeft, ChevronRight, Edit2, Eye, Plus, Search, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const PAGE_SIZE = 10;
 
 const LaboratoryList = () => {
   const dispatch = useDispatch();
-  const { items, total, currentPage, totalPages, loading } = useSelector((state) => state.laboratories);
+  const { items, total, currentPage, totalPages, loading, error } = useSelector(
+    (state) => state.laboratories
+  );
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const deferredSearchTerm = useDeferredValue(searchTerm.trim());
 
   useEffect(() => {
-    dispatch(fetchLaboratories({ page: 1, search: searchTerm }));
-  }, [dispatch, searchTerm]);
+    dispatch(fetchLaboratories({ page, size: PAGE_SIZE, search: deferredSearchTerm }));
+  }, [deferredSearchTerm, dispatch, page]);
 
-  const handleDelete = (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce laboratoire ?')) {
-      dispatch(deleteLaboratory(id));
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+    setPage(1);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Supprimer ce laboratoire ?')) {
+      return;
+    }
+
+    try {
+      await dispatch(deleteLaboratory(id)).unwrap();
+      const nextPage = items.length === 1 && page > 1 ? page - 1 : page;
+
+      if (nextPage !== page) {
+        setPage(nextPage);
+        return;
+      }
+
+      dispatch(fetchLaboratories({ page: nextPage, size: PAGE_SIZE, search: deferredSearchTerm }));
+    } catch {
+      // The slice stores the API error for inline display.
     }
   };
 
@@ -24,13 +53,45 @@ const LaboratoryList = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Laboratoires</h1>
-          <p className="text-gray-500 text-sm">Gérez les laboratoires de l'établissement</p>
+          <p className="text-gray-500 text-sm">Gerez les laboratoires de l'etablissement</p>
         </div>
         <Link to="/laboratories/new" className="btn-primary flex items-center justify-center gap-2">
           <Plus size={18} />
-          Nouveau Laboratoire
+          Nouveau laboratoire
         </Link>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="card p-4">
+          <p className="text-sm text-gray-500">Total</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{total}</p>
+        </div>
+        <div className="card p-4">
+          <p className="text-sm text-gray-500">Page</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">
+            {currentPage} / {totalPages}
+          </p>
+        </div>
+        <div className="card p-4">
+          <p className="text-sm text-gray-500">Recherche</p>
+          <p className="text-sm font-semibold text-gray-900 mt-3">
+            {deferredSearchTerm || 'Toutes les donnees'}
+          </p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-center justify-between gap-4">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => dispatch(clearError())}
+            className="font-semibold text-red-700 hover:text-red-800"
+          >
+            Fermer
+          </button>
+        </div>
+      )}
 
       <div className="card p-4">
         <div className="relative mb-6">
@@ -40,7 +101,7 @@ const LaboratoryList = () => {
             placeholder="Rechercher un laboratoire..."
             className="input-field pl-10"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
 
@@ -64,7 +125,7 @@ const LaboratoryList = () => {
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="px-6 py-10 text-center text-gray-400">
-                    Aucun laboratoire trouvé.
+                    Aucun laboratoire trouve.
                   </td>
                 </tr>
               ) : (
@@ -76,7 +137,7 @@ const LaboratoryList = () => {
                           {lab.image ? (
                             <img src={lab.image} alt={lab.nom} className="w-full h-full object-cover" />
                           ) : (
-                            lab.nom[0]
+                            lab.nom?.charAt(0)?.toUpperCase() || 'L'
                           )}
                         </div>
                         <span className="font-medium text-gray-900">{lab.nom}</span>
@@ -101,6 +162,7 @@ const LaboratoryList = () => {
                           <Edit2 size={18} />
                         </Link>
                         <button
+                          type="button"
                           onClick={() => handleDelete(lab.id)}
                           className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                         >
@@ -113,6 +175,33 @@ const LaboratoryList = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-gray-100 pt-4">
+          <p className="text-sm text-gray-500">
+            {items.length} resultat(s) affiches sur {total}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((value) => Math.max(1, value - 1))}
+              disabled={page <= 1 || loading}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-2"
+            >
+              <ChevronLeft size={16} />
+              Precedent
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+              disabled={page >= totalPages || loading}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-2"
+            >
+              Suivant
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

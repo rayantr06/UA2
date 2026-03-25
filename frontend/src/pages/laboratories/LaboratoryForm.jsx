@@ -3,24 +3,37 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
-import { addLaboratory, updateLaboratory, fetchLaboratoryById, updateLaboratoryImage } from '../../features/laboratories/laboratoriesSlice';
+import {
+  addLaboratory,
+  clearCurrentLaboratory,
+  clearError,
+  fetchLaboratoryById,
+  updateLaboratory,
+  updateLaboratoryImage,
+} from '../../features/laboratories/laboratoriesSlice';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, X } from 'lucide-react';
 
 const schema = yup.object({
   nom: yup.string().required('Le nom est obligatoire'),
-  salle: yup.string().required('Numéro de salle obligatoire'),
+  salle: yup.string().required('Numero de salle obligatoire'),
   information: yup.string(),
 });
 
 const LaboratoryForm = () => {
   const { id } = useParams();
-  const isEdit = !!id;
+  const isEdit = Boolean(id);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { currentLaboratory, loading } = useSelector((state) => state.laboratories);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
+  const { currentLaboratory, loading, submitting, error } = useSelector(
+    (state) => state.laboratories
+  );
+  const [pendingImage, setPendingImage] = useState({
+    key: null,
+    file: null,
+    preview: null,
+  });
+  const routeImageKey = isEdit ? `edit-${id}` : 'new';
 
   const {
     register,
@@ -29,76 +42,139 @@ const LaboratoryForm = () => {
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
+    defaultValues: {
+      nom: '',
+      salle: '',
+      information: '',
+    },
   });
 
   useEffect(() => {
+    dispatch(clearError());
+
     if (isEdit) {
       dispatch(fetchLaboratoryById(id));
+    } else {
+      dispatch(clearCurrentLaboratory());
+      reset({
+        nom: '',
+        salle: '',
+        information: '',
+      });
     }
-  }, [id, dispatch, isEdit]);
+
+    return () => {
+      dispatch(clearCurrentLaboratory());
+    };
+  }, [dispatch, id, isEdit, reset]);
 
   useEffect(() => {
     if (isEdit && currentLaboratory) {
-      reset(currentLaboratory);
-      if (currentLaboratory.image) {
-        setImagePreview(currentLaboratory.image);
-      }
+      reset({
+        nom: currentLaboratory.nom || '',
+        salle: currentLaboratory.salle || '',
+        information: currentLaboratory.information || '',
+      });
     }
-  }, [currentLaboratory, reset, isEdit]);
+  }, [currentLaboratory, isEdit, reset]);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+
+    if (!file) {
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPendingImage({
+        key: routeImageKey,
+        file,
+        preview: reader.result,
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
-  const onSubmit = async (data) => {
-    if (isEdit) {
-      await dispatch(updateLaboratory({ id, data }));
-      if (imageFile) {
+  const handleClearSelectedImage = () => {
+    setPendingImage({
+      key: routeImageKey,
+      file: null,
+      preview: null,
+    });
+  };
+
+  const onSubmit = async (formValues) => {
+    const payload = {
+      nom: formValues.nom.trim(),
+      salle: formValues.salle.trim(),
+      information: formValues.information?.trim() || '',
+    };
+
+    const imageFile = pendingImage.key === routeImageKey ? pendingImage.file : null;
+
+    try {
+      if (isEdit) {
+        await dispatch(updateLaboratory({ id, data: payload })).unwrap();
+
+        if (imageFile) {
+          const formData = new FormData();
+          formData.append('image', imageFile);
+          await dispatch(updateLaboratoryImage({ id, formData })).unwrap();
+        }
+      } else {
         const formData = new FormData();
-        formData.append('image', imageFile);
-        await dispatch(updateLaboratoryImage({ id, formData }));
+        formData.append('nom', payload.nom);
+        formData.append('salle', payload.salle);
+        formData.append('information', payload.information);
+
+        if (imageFile) {
+          formData.append('image', imageFile);
+        }
+
+        await dispatch(addLaboratory(formData)).unwrap();
       }
-    } else {
-      const formData = new FormData();
-      formData.append('nom', data.nom);
-      formData.append('salle', data.salle);
-      formData.append('information', data.information || '');
-      if (imageFile) {
-        formData.append('image', imageFile);
-      }
-      await dispatch(addLaboratory(formData));
+
+      navigate('/laboratories');
+    } catch {
+      // The slice stores the API error for inline display.
     }
-    navigate('/laboratories');
   };
+
+  const selectedImagePreview =
+    pendingImage.key === routeImageKey ? pendingImage.preview : null;
+  const displayedImage = selectedImagePreview || (isEdit ? currentLaboratory?.image : null);
 
   return (
     <div className="p-6 max-w-4xl mx-auto animate-slide-in">
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
+            type="button"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
             <ArrowLeft size={20} />
           </button>
           <h1 className="text-2xl font-bold text-gray-900">
-            {isEdit ? 'Modifier le laboratoire' : 'Nouveau Laboratoire'}
+            {isEdit ? 'Modifier le laboratoire' : 'Nouveau laboratoire'}
           </h1>
         </div>
       </div>
 
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {isEdit && loading && !currentLaboratory ? (
+        <div className="card p-8 text-center text-gray-500">Chargement du laboratoire...</div>
+      ) : null}
+
       <div className="card p-8">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Column: Info */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -123,7 +199,9 @@ const LaboratoryForm = () => {
                   className={`input-field ${errors.salle ? 'border-red-500' : ''}`}
                   placeholder="Ex: A-302"
                 />
-                {errors.salle && <p className="text-red-500 text-xs mt-1">{errors.salle.message}</p>}
+                {errors.salle && (
+                  <p className="text-red-500 text-xs mt-1">{errors.salle.message}</p>
+                )}
               </div>
 
               <div>
@@ -134,39 +212,37 @@ const LaboratoryForm = () => {
                   {...register('information')}
                   rows="4"
                   className="input-field resize-none"
-                  placeholder="Détails supplémentaires..."
+                  placeholder="Details supplementaires..."
                 />
               </div>
             </div>
 
-            {/* Right Column: Image */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Image du laboratoire
               </label>
               <div className="relative group">
                 <div className="w-full h-64 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center bg-gray-50 overflow-hidden relative">
-                  {imagePreview ? (
+                  {displayedImage ? (
                     <>
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImagePreview(null);
-                          setImageFile(null);
-                        }}
-                        className="absolute top-2 right-2 p-1 bg-white/80 backdrop-blur shadow-sm rounded-full text-gray-600 hover:text-red-600 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
+                      <img src={displayedImage} alt="Preview" className="w-full h-full object-cover" />
+                      {selectedImagePreview ? (
+                        <button
+                          type="button"
+                          onClick={handleClearSelectedImage}
+                          className="absolute top-2 right-2 p-1 bg-white/80 backdrop-blur shadow-sm rounded-full text-gray-600 hover:text-red-600 transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                      ) : null}
                     </>
                   ) : (
                     <div className="text-center p-4">
                       <div className="mx-auto w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center text-gray-400 mb-3">
                         <Upload size={24} />
                       </div>
-                      <p className="text-sm text-gray-500 font-medium">Cliquez pour téléverser</p>
-                      <p className="text-xs text-gray-400">PNG, JPG jusqu'à 5MB</p>
+                      <p className="text-sm text-gray-500 font-medium">Cliquez pour televerser</p>
+                      <p className="text-xs text-gray-400">PNG, JPG jusqu'a 5 MB</p>
                     </div>
                   )}
                   <input
@@ -190,11 +266,11 @@ const LaboratoryForm = () => {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={submitting}
               className="btn-primary flex items-center gap-2"
             >
               <Save size={18} />
-              {isEdit ? 'Mettre à jour' : 'Enregistrer'}
+              {submitting ? 'Enregistrement...' : isEdit ? 'Mettre a jour' : 'Enregistrer'}
             </button>
           </div>
         </form>
