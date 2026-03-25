@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import { ArrowLeft, Save, ShieldCheck } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import FormInput from '../../components/common/FormInput';
 import { addRole, clearRolesError } from '../../features/roles/rolesSlice';
 
 const schema = yup.object({
@@ -73,16 +74,13 @@ const RoleFormPage = () => {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Titre*</label>
-            <input
-              type="text"
-              {...register('titre')}
-              className={`input-field ${errors.titre ? 'border-red-500' : ''}`}
-              placeholder="Ex: administrateur"
-            />
-            {errors.titre && <p className="text-red-500 text-xs mt-1">{errors.titre.message}</p>}
-          </div>
+          <FormInput
+            label="Titre*"
+            name="titre"
+            register={register}
+            errors={errors}
+            placeholder="Ex: administrateur"
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>

@@ -6,6 +6,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, UserCircle2 } from 'lucide-react';
 import api from '../../api/axios';
+import FormInput from '../../components/common/FormInput';
+import SelectInput from '../../components/common/SelectInput';
 import {
   assignUserRoles,
   assignUserSubjects,
@@ -61,7 +63,14 @@ const UserFormPage = () => {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
 
-  const conduiteOptions = useMemo(() => ['Excellente', 'Bonne', 'Passable'], []);
+  const conduiteOptions = useMemo(
+    () => [
+      { id: 'excellente', nom: 'Excellente' },
+      { id: 'bonne', nom: 'Bonne' },
+      { id: 'passable', nom: 'Passable' },
+    ],
+    []
+  );
 
   const {
     register,
@@ -246,59 +255,35 @@ const UserFormPage = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nom*</label>
-                <input {...register('nom')} className={`input-field ${errors.nom ? 'border-red-500' : ''}`} />
-                {errors.nom && <p className="text-red-500 text-xs mt-1">{errors.nom.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prenom*</label>
-                <input {...register('prenom')} className={`input-field ${errors.prenom ? 'border-red-500' : ''}`} />
-                {errors.prenom && <p className="text-red-500 text-xs mt-1">{errors.prenom.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email*</label>
-                <input type="email" {...register('email')} className={`input-field ${errors.email ? 'border-red-500' : ''}`} />
-                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {isEdit ? 'Nouveau mot de passe' : 'Mot de passe*'}
-                </label>
-                <input type="password" {...register('mot_de_passe')} className={`input-field ${errors.mot_de_passe ? 'border-red-500' : ''}`} />
-                {errors.mot_de_passe && <p className="text-red-500 text-xs mt-1">{errors.mot_de_passe.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Naissance</label>
-                <input type="date" {...register('naissance')} className="input-field" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Conduite</label>
-                <select {...register('conduite')} className="input-field">
-                  <option value="">Choisir</option>
-                  {conduiteOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <FormInput label="Nom*" name="nom" register={register} errors={errors} />
+              <FormInput label="Prenom*" name="prenom" register={register} errors={errors} />
+              <FormInput label="Email*" name="email" type="email" register={register} errors={errors} />
+              <FormInput
+                label={isEdit ? 'Nouveau mot de passe' : 'Mot de passe*'}
+                name="mot_de_passe"
+                type="password"
+                register={register}
+                errors={errors}
+              />
+              <FormInput label="Naissance" name="naissance" type="date" register={register} errors={errors} />
+              <SelectInput
+                label="Conduite"
+                name="conduite"
+                options={conduiteOptions}
+                register={register}
+                errors={errors}
+                placeholder="Choisir"
+              />
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Departement</label>
-                <select {...register('DepartmentId')} className="input-field">
-                  <option value="">Aucun</option>
-                  {departments.map((department) => (
-                    <option key={department.id} value={department.id}>
-                      {department.nom}
-                    </option>
-                  ))}
-                </select>
+                <SelectInput
+                  label="Departement"
+                  name="DepartmentId"
+                  options={departments}
+                  register={register}
+                  errors={errors}
+                  placeholder="Aucun"
+                />
               </div>
 
               <div className="md:col-span-2">

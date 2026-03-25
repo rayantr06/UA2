@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
-import { Eye, Plus, Search, ShieldCheck, Trash2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Search, ShieldCheck } from 'lucide-react';
+import DataTable from '../../components/common/DataTable';
 import { deleteRole, fetchRoles } from '../../features/roles/rolesSlice';
 
 const RolesListPage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { items, loading } = useSelector((state) => state.roles);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -17,11 +19,36 @@ const RolesListPage = () => {
     `${role.titre || ''} ${role.description || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = (id) => {
-    if (window.confirm('Supprimer ce role ?')) {
-      dispatch(deleteRole(id));
+  const handleDelete = (role) => {
+    if (window.confirm(`Supprimer le role ${role.titre} ?`)) {
+      dispatch(deleteRole(role.id));
     }
   };
+
+  const columns = [
+    {
+      label: 'Titre',
+      key: 'titre',
+      render: (value, role) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center text-primary-600 font-bold">
+            <ShieldCheck size={18} />
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">{value}</p>
+            <p className="text-xs text-gray-400 md:hidden line-clamp-1">
+              {role.description || 'Aucune description'}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      label: 'Description',
+      key: 'description',
+      render: (value) => <span className="line-clamp-1">{value || 'Aucune description'}</span>,
+    },
+  ];
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -48,67 +75,14 @@ const RolesListPage = () => {
           />
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
-              <tr>
-                <th className="px-6 py-4">Titre</th>
-                <th className="px-6 py-4 hidden md:table-cell">Description</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
-                <tr>
-                  <td colSpan="3" className="px-6 py-10 text-center text-gray-400">
-                    Chargement...
-                  </td>
-                </tr>
-              ) : filteredRoles.length === 0 ? (
-                <tr>
-                  <td colSpan="3" className="px-6 py-10 text-center text-gray-400">
-                    Aucun role trouve.
-                  </td>
-                </tr>
-              ) : (
-                filteredRoles.map((role) => (
-                  <tr key={role.id} className="group hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center text-primary-600 font-bold">
-                          <ShieldCheck size={18} />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{role.titre}</p>
-                          <p className="text-xs text-gray-400 md:hidden line-clamp-1">{role.description || 'Aucune description'}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-500 hidden md:table-cell">
-                      <span className="line-clamp-1">{role.description || 'Aucune description'}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          to={`/roles/${role.id}`}
-                          className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
-                        >
-                          <Eye size={18} />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(role.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={columns}
+          data={filteredRoles}
+          loading={loading}
+          emptyMessage="Aucun role trouve."
+          onView={(role) => navigate(`/roles/${role.id}`)}
+          onDelete={handleDelete}
+        />
       </div>
     </div>
   );

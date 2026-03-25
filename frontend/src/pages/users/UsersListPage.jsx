@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
-import { Edit2, Eye, Plus, Search, Trash2, UserCircle2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Search, UserCircle2 } from 'lucide-react';
+import DataTable from '../../components/common/DataTable';
+import Pagination from '../../components/common/Pagination';
 import { deleteUser, fetchUsers } from '../../features/users/usersSlice';
 
 const UsersListPage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { items, loading, currentPage, totalPages } = useSelector((state) => state.users);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -14,14 +17,41 @@ const UsersListPage = () => {
     dispatch(fetchUsers({ page, search: searchTerm }));
   }, [dispatch, page, searchTerm]);
 
-  const handleDelete = (id) => {
-    if (window.confirm('Supprimer cet utilisateur ?')) {
-      dispatch(deleteUser(id));
+  const handleDelete = (user) => {
+    if (window.confirm(`Supprimer l'utilisateur ${user.nom} ${user.prenom} ?`)) {
+      dispatch(deleteUser(user.id));
     }
   };
 
-  const canGoPrev = page > 1;
-  const canGoNext = page < totalPages;
+  const columns = [
+    {
+      label: 'Utilisateur',
+      key: 'nom',
+      render: (_, user) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center overflow-hidden">
+            {user.photo ? (
+              <img src={user.photo} alt={user.nom} className="w-full h-full object-cover" />
+            ) : (
+              <UserCircle2 size={26} />
+            )}
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">
+              {user.nom} {user.prenom}
+            </p>
+            <p className="text-xs text-gray-500">ID #{user.id}</p>
+          </div>
+        </div>
+      ),
+    },
+    { label: 'Email', key: 'email' },
+    {
+      label: 'Departement',
+      key: 'DepartmentId',
+      render: (value, user) => user.Department?.nom || value || 'N/A',
+    },
+  ];
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -51,105 +81,17 @@ const UsersListPage = () => {
           />
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
-              <tr>
-                <th className="px-6 py-4">Utilisateur</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4 hidden md:table-cell">DepartmentId</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-10 text-center text-gray-400">
-                    Chargement...
-                  </td>
-                </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-10 text-center text-gray-400">
-                    Aucun utilisateur trouve.
-                  </td>
-                </tr>
-              ) : (
-                items.map((user) => (
-                  <tr key={user.id} className="group hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center overflow-hidden">
-                          {user.photo ? (
-                            <img src={user.photo} alt={user.nom} className="w-full h-full object-cover" />
-                          ) : (
-                            <UserCircle2 size={26} />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {user.nom} {user.prenom}
-                          </p>
-                          <p className="text-xs text-gray-500">ID #{user.id}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{user.email}</td>
-                    <td className="px-6 py-4 text-gray-600 hidden md:table-cell">
-                      {user.DepartmentId || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          to={`/users/${user.id}`}
-                          className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
-                        >
-                          <Eye size={18} />
-                        </Link>
-                        <Link
-                          to={`/users/edit/${user.id}`}
-                          className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
-                        >
-                          <Edit2 size={18} />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(user.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={columns}
+          data={items}
+          loading={loading}
+          emptyMessage="Aucun utilisateur trouve."
+          onView={(user) => navigate(`/users/${user.id}`)}
+          onEdit={(user) => navigate(`/users/edit/${user.id}`)}
+          onDelete={handleDelete}
+        />
 
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
-          <span>
-            Page {currentPage} sur {totalPages}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="px-3 py-1 border border-gray-200 rounded-md disabled:opacity-40"
-              onClick={() => setPage((value) => value - 1)}
-              disabled={!canGoPrev}
-            >
-              Precedent
-            </button>
-            <button
-              type="button"
-              className="px-3 py-1 border border-gray-200 rounded-md disabled:opacity-40"
-              onClick={() => setPage((value) => value + 1)}
-              disabled={!canGoNext}
-            >
-              Suivant
-            </button>
-          </div>
-        </div>
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </div>
   );
