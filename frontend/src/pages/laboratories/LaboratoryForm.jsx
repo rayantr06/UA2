@@ -119,6 +119,7 @@ const LaboratoryForm = () => {
 
         if (imageFile) {
           const formData = new FormData();
+          formData.append('nom', payload.nom);
           formData.append('image', imageFile);
           await dispatch(updateLaboratoryImage({ id, formData })).unwrap();
         }
