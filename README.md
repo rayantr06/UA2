@@ -7,7 +7,8 @@ Ce depot contient actuellement:
 - la documentation de planification du travail
 - le plan de repartition pour une equipe de 3
 
-Le frontend React sera ajoute ensuite dans un dossier separe du backend.
+Le frontend React est maintenant initialise dans le dossier `frontend/`.
+Les modules Laboratories et Equipment (Personne 2) sont completes.
 
 ## Structure actuelle
 
